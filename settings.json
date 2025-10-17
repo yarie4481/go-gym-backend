@@ -1,0 +1,25 @@
+{
+  // ✅ Enable formatting and import organization for Go
+  "[go]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true
+    }
+  },
+
+  // ✅ Use goimports (auto format + fix imports)
+  "go.formatTool": "goimports",
+
+  // ✅ Optional: format manually on save fallback
+  "editor.defaultFormatter": "golang.go",
+
+  // ✅ Optional: enable Go language server (gopls)
+  "go.useLanguageServer": true,
+
+  // ✅ Optional: linting and code suggestions
+  "go.lintTool": "golangci-lint",
+  "go.lintOnSave": "package",
+
+  // ✅ Make sure formatting is applied on save globally
+  "editor.formatOnSave": true
+}

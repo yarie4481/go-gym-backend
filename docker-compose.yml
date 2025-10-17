@@ -1,0 +1,61 @@
+services:
+  go-app:
+    build: .
+    container_name: go-app
+    ports:
+      - "8787:8787"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_USER: postgres
+      DB_PASSWORD: 123
+      DB_NAME: gym_test
+      DB_PORT: 5432
+      JWT_SECRET: your-super-secret-jwt-key-here-change-this-in-production
+    restart: always
+
+  db:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: gym_test
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gym_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9091:9090"
+    depends_on:
+      - go-app
+    restart: always
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    restart: always
+
+volumes:
+  postgres_data:
