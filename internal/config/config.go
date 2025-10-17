@@ -16,19 +16,19 @@ var jwtKey = []byte("your-secret-key")
 
 func InitDB() {
 	// Get database connection details from environment variables with fallbacks
-	dbHost := getEnv("DB_HOST", "localhost")
-	dbUser := getEnv("DB_USER", "postgres")
-	dbPassword := getEnv("DB_PASSWORD", "123")
-	dbName := getEnv("DB_NAME", "gym_test")
-	dbPort := getEnv("DB_PORT", "5432")
+	// dbHost := getEnv("DB_HOST", "localhost")
+	// dbUser := getEnv("DB_USER", "postgres")
+	// dbPassword := getEnv("DB_PASSWORD", "123")
+	// dbName := getEnv("DB_NAME", "gym_test")
+	// dbPort := getEnv("DB_PORT", "5432")
 
 
 	// Session Pooler settings (IPv4 compatible)
-	// dbHost := getEnv("DB_HOST", "aws-1-us-east-2.pooler.supabase.com")
-	// dbUser := getEnv("DB_USER", "postgres.totqgnazgprwdvwdqmpe") // Supabase Session Pooler requires full username
-	// dbPassword := getEnv("DB_PASSWORD", "1234")
-	// dbName := getEnv("DB_NAME", "postgres")
-	// dbPort := getEnv("DB_PORT", "5432")
+	dbHost := getEnv("DB_HOST", "aws-1-us-east-2.pooler.supabase.com")
+	dbUser := getEnv("DB_USER", "postgres.totqgnazgprwdvwdqmpe") // Supabase Session Pooler requires full username
+	dbPassword := getEnv("DB_PASSWORD", "1234")
+	dbName := getEnv("DB_NAME", "postgres")
+	dbPort := getEnv("DB_PORT", "5432")
 
 
 
