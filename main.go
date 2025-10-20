@@ -297,7 +297,7 @@ func setupRouter(healthChecker *HealthChecker) *gin.Engine {
 
 	// CORS Middleware - FIXED VERSION
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowOrigins:     []string{"https://my-fitness-pro.netlify.app ", "http://localhost:3000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
 		ExposeHeaders:    []string{"Content-Length", "Content-Type", "X-Request-ID"},
