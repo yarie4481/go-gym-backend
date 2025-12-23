@@ -331,7 +331,7 @@ func setupRouter(healthChecker *HealthChecker) *gin.Engine {
 		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, X-Requested-With, X-CSRF-Token")
-		// Note: No Access-Control-Allow-Credentials header when using *
+c.Header("Access-Control-Allow-Origin", "*")
 		c.Status(http.StatusOK)
 	})
 
