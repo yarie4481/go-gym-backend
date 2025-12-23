@@ -294,15 +294,14 @@ func setupRouter(healthChecker *HealthChecker) *gin.Engine {
 	r := gin.New()
 	r.RedirectTrailingSlash = false
 
-
-	// CORS Middleware - FIXED VERSION
+	// CORS Middleware - SIMPLE WILDCARD VERSION
 	r.Use(cors.New(cors.Config{
-    AllowAllOrigins: true,
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
-		ExposeHeaders:    []string{"Content-Length", "Content-Type", "X-Request-ID"},
-		// AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
+		AllowOrigins: []string{"*"}, // Use wildcard
+		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"},
+		AllowHeaders: []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", "X-CSRF-Token"},
+		ExposeHeaders: []string{"Content-Length", "Content-Type", "X-Request-ID"},
+		AllowCredentials: false, // IMPORTANT: Must be false for wildcard *
+		MaxAge: 12 * time.Hour,
 	}))
 
 	// Debug middleware to log all requests
@@ -327,11 +326,12 @@ func setupRouter(healthChecker *HealthChecker) *gin.Engine {
 	r.GET("/version", VersionHandler)
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
-	// OPTIONS handler for preflight requests
+	// OPTIONS handler for preflight requests - SIMPLIFIED
 	r.OPTIONS("/*path", func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "https://gym-frontend-sigma-bay.vercel.app")
+		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD")
-		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, X-Requested-With")
+		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, X-Requested-With, X-CSRF-Token")
+		// Note: No Access-Control-Allow-Credentials header when using *
 		c.Status(http.StatusOK)
 	})
 
