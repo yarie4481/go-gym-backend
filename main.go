@@ -301,7 +301,7 @@ func setupRouter(healthChecker *HealthChecker) *gin.Engine {
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
 		ExposeHeaders:    []string{"Content-Length", "Content-Type", "X-Request-ID"},
-		AllowCredentials: true,
+		// AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
 
@@ -332,7 +332,6 @@ func setupRouter(healthChecker *HealthChecker) *gin.Engine {
 		c.Header("Access-Control-Allow-Origin", "https://gym-frontend-sigma-bay.vercel.app")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, X-Requested-With")
-		c.Header("Access-Control-Allow-Credentials", "true")
 		c.Status(http.StatusOK)
 	})
 
