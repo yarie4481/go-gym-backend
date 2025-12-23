@@ -18,9 +18,10 @@ func NewClassSessionController(service *services.ClassSessionService) *ClassSess
 }
 
 // POST /classsession
+// In controllers/classsession_controller.go
 func (c *ClassSessionController) CreateSession(ctx *gin.Context) {
 	var body struct {
-		ClassID  string `json:"class_id" binding:"required"` // Add class_id to request
+		ClassID  string `json:"class_id" binding:"required"`
 		StartsAt string `json:"starts_at" binding:"required"`
 		EndsAt   string `json:"ends_at" binding:"required"`
 	}
@@ -29,23 +30,41 @@ func (c *ClassSessionController) CreateSession(ctx *gin.Context) {
 		return
 	}
 
-	// Parse class ID from request
+	// Parse class ID
 	classUUID, err := uuid.Parse(body.ClassID)
 	if err != nil {
 		ctx.JSON(400, gin.H{"error": "Invalid class ID"})
 		return
 	}
 
-	startTime, err := time.Parse(time.RFC3339, body.StartsAt)
+	// Try multiple time formats
+	var startTime, endTime time.Time
+	
+	// Try RFC3339 first
+	startTime, err = time.Parse(time.RFC3339, body.StartsAt)
 	if err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid start time format"})
-		return
+		// Try with added seconds
+		startTime, err = time.Parse(time.RFC3339, body.StartsAt + ":00Z")
+		if err != nil {
+			// Try without timezone
+			startTime, err = time.Parse("2006-01-02T15:04:05", body.StartsAt + ":00")
+			if err != nil {
+				ctx.JSON(400, gin.H{"error": "Invalid start time format. Expected RFC3339 (e.g., 2025-12-23T05:58:00Z)"})
+				return
+			}
+		}
 	}
 
-	endTime, err := time.Parse(time.RFC3339, body.EndsAt)
+	endTime, err = time.Parse(time.RFC3339, body.EndsAt)
 	if err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid end time format"})
-		return
+		endTime, err = time.Parse(time.RFC3339, body.EndsAt + ":00Z")
+		if err != nil {
+			endTime, err = time.Parse("2006-01-02T15:04:05", body.EndsAt + ":00")
+			if err != nil {
+				ctx.JSON(400, gin.H{"error": "Invalid end time format. Expected RFC3339 (e.g., 2025-12-23T07:13:00Z)"})
+				return
+			}
+		}
 	}
 
 	session, err := c.service.CreateSession(classUUID, startTime, endTime)

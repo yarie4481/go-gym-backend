@@ -9,7 +9,7 @@ import (
 func RegisterClassSessionRoutes(r *gin.Engine, ctrl *controllers.ClassSessionController) {
 	group := r.Group("/classsession")
 	{
-		group.POST("/", ctrl.CreateSession)      // Create a session
+		group.POST("/create", ctrl.CreateSession)      // Create a session
 		group.GET("/", ctrl.ListSessions)        // List all sessions
 		group.GET("/:id", ctrl.GetSession)       // Get session by ID
 	}
