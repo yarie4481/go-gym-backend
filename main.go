@@ -235,6 +235,118 @@ func VersionHandler(c *gin.Context) {
 	})
 }
 
+// CBEBirrTestHandler - Simple endpoint to test token capture
+func CBEBirrTestHandler(c *gin.Context) {
+	// Log everything about the request
+	logger.Log.Info("\n=== CBEBirr TEST ENDPOINT HIT ===")
+	logger.Log.WithFields(logrus.Fields{
+		"time":      time.Now().Format(time.RFC3339),
+		"url":       c.Request.URL.String(),
+		"method":    c.Request.Method,
+		"remote_ip": c.ClientIP(),
+		"user_agent": c.Request.UserAgent(),
+	}).Info("Request details")
+
+	// Log all headers
+	headers := make(map[string]string)
+	for key, values := range c.Request.Header {
+		if len(values) > 0 {
+			headers[key] = values[0]
+		}
+	}
+	logger.Log.WithField("headers", headers).Info("Request headers")
+
+	// Check Authorization header
+	authHeader := c.GetHeader("Authorization")
+	logger.Log.WithField("authorization_header", authHeader).Info("Authorization header")
+
+	if authHeader == "" {
+		logger.Log.Warn("❌ NO Authorization header found!")
+		c.JSON(200, gin.H{
+			"success": false,
+			"message": "NO Authorization header found",
+			"note":    "CBEBirr should send: Authorization: Bearer YOUR_TOKEN",
+			"test_by": "Yared from Adiamat",
+		})
+		return
+	}
+
+	// Check if it starts with "Bearer "
+	if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+		logger.Log.WithFields(logrus.Fields{
+			"expected": "Bearer {token}",
+			"got":      authHeader,
+		}).Warn("❌ Authorization header format wrong!")
+		
+		c.JSON(200, gin.H{
+			"success":         false,
+			"message":         "Authorization header should start with 'Bearer '",
+			"received_header": authHeader,
+			"test_by":         "Yared from Adiamat",
+		})
+		return
+	}
+
+	// Extract token
+	token := authHeader[7:]
+	logger.Log.WithFields(logrus.Fields{
+		"token":        token,
+		"token_length": len(token),
+	}).Info("✅ TOKEN EXTRACTED SUCCESSFULLY!")
+
+	// Return success response
+	c.JSON(200, gin.H{
+		"success":            true,
+		"message":            "Token captured successfully!",
+		"token_length":       len(token),
+		"token_first_10":     getFirstChars(token, 10),
+		"token_last_10":      getLastChars(token, 10),
+		"note":               "Token received correctly. You can proceed with full integration.",
+		"test_by":            "Yared from Adiamat",
+		"test_endpoint":      "http://54.159.60.214:8802/api/cbebirr-test",
+		"timestamp":          time.Now().Format(time.RFC3339),
+	})
+}
+
+// Helper functions for token display
+func getFirstChars(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n]
+}
+
+func getLastChars(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[len(s)-n:]
+}
+
+// CBEBirrCallbackHandler - For POST callback testing
+func CBEBirrCallbackHandler(c *gin.Context) {
+	logger.Log.Info("\n=== CBEBirr CALLBACK TEST ===")
+	
+	// Log headers
+	authHeader := c.GetHeader("Authorization")
+	logger.Log.WithField("authorization", authHeader).Info("Callback headers")
+	
+	// Try to parse body
+	var body map[string]interface{}
+	if err := c.ShouldBindJSON(&body); err == nil {
+		logger.Log.WithField("body", body).Info("Callback body")
+	}
+	
+	// Simple response
+	c.JSON(200, gin.H{
+		"success":           true,
+		"message":           "Callback received",
+		"has_auth_header":   authHeader != "",
+		"auth_header_exists": len(authHeader) > 0,
+		"test_by":           "Yared from Adiamat",
+	})
+}
+
 // --- Application Initialization ---
 
 func initializeApplication(ctx context.Context) (*Application, error) {
@@ -290,6 +402,7 @@ func initializeApplication(ctx context.Context) (*Application, error) {
 		DB:     config.DB,
 	}, nil
 }
+
 func setupRouter(healthChecker *HealthChecker) *gin.Engine {
 	r := gin.New()
 	r.RedirectTrailingSlash = false
@@ -326,12 +439,17 @@ func setupRouter(healthChecker *HealthChecker) *gin.Engine {
 	r.GET("/version", VersionHandler)
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
+	// ✅ ADD CBEBirr Test Endpoints
+	r.GET("/api/cbebirr-test", CBEBirrTestHandler)
+	r.POST("/api/cbebirr-test", CBEBirrCallbackHandler)
+	r.GET("/cbebirr-test", CBEBirrTestHandler) // Alternative endpoint
+
 	// OPTIONS handler for preflight requests - SIMPLIFIED
 	r.OPTIONS("/*path", func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, X-Requested-With, X-CSRF-Token")
-c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Origin", "*")
 		c.Status(http.StatusOK)
 	})
 
@@ -356,6 +474,7 @@ func printRoutes(r *gin.Engine) {
 	}
 	logger.Log.Info("=== End Registered Routes ===")
 }
+
 func registerAllRoutes(r *gin.Engine) {
 	// Repositories
 	userRepo := repositories.NewUserRepository(config.DB)
@@ -401,10 +520,8 @@ func registerAllRoutes(r *gin.Engine) {
 	{
 		auth.POST("/register", authController.Register)
 		auth.POST("/login", authController.Login)
-		 auth.GET("/alluser", authController.GetAllUsers)
-		 auth.GET("/trainer", authController.GetTrainers)
-
-
+		auth.GET("/alluser", authController.GetAllUsers)
+		auth.GET("/trainer", authController.GetTrainers)
 	}
 
 	// Register all routes
@@ -494,13 +611,6 @@ func main() {
 	if err != nil {
 		logger.Log.Fatalf("Failed to initialize application: %v", err)
 	}
-
-	// Log startup information
-	// app.Logger.WithFields(logrus.Fields{
-	// 	"version":    version,
-	// 	"commit":     commitHash,
-	// 	"build_date": buildDate,
-	// }).Info("Application starting")
 
 	// Run the application
 	if err := app.Run(ctx); err != nil {
